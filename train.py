@@ -143,7 +143,7 @@ lr = tf.keras.callbacks.ReduceLROnPlateau(
 
 cnn.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
 
-history = cnn.fit(train_aug, validation_data=valid_aug, epochs=10, verbose=0,
+history = cnn.fit(train_aug, validation_data=valid_aug, epochs=50, verbose=0,
                   callbacks=[ch, es, lr, TqdmCallback(verbose=1)])
 
 y_pred = np.argmax(cnn.predict(test), axis=-1)

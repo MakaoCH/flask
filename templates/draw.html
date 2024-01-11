@@ -1,23 +1,64 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.1/fabric.min.js"></script>
 <section>
-    <h1>Dessiner et Prédiction</h1>
+    <script src="https://cdn.jsdelivr.net/npm/konva@8.2.2/konva.min.js"></script>
+    <h1>Dessiner et prédire</h1>
     
-    <!-- Canvas pour le dessin -->
-    <canvas id="drawingCanvas" width="200" height="200" style="border:1px solid #000;"></canvas>
+    <div id="drawingContainer"></div>
     <br>
-    <button onclick="clearCanvas()">Effacer le dessin</button>
-    <button onclick="predictDigit()">Prédire le chiffre</button>
-    <h2>Prédiction: <span id="prediction">{{ prediction }}</span></h2>
+    <button onclick="clearCanvas()">Effacer</button>
+    <button onclick="predictDigit()">Prediction</button>
+    <h2>Prediction: <span id="prediction"></span></h2>
 
     <script>
-        var canvas = new fabric.Canvas('drawingCanvas', { isDrawingMode: true });
-    
+        var stage = new Konva.Stage({
+            container: 'drawingContainer',
+            width: 200,
+            height: 200,
+        });
+
+        var layer = new Konva.Layer();
+        stage.add(layer);
+
+        var isPaint = false;
+        var lastLine;
+
+        stage.on('mousedown touchstart', function (e) {
+            isPaint = true;
+            var pos = stage.getPointerPosition();
+            lastLine = new Konva.Line({
+                stroke: 'black',
+                strokeWidth: 5,
+                globalCompositeOperation: 'source-over',
+                points: [pos.x, pos.y],
+            });
+            layer.add(lastLine);
+        });
+
+        stage.on('mouseup touchend', function () {
+            isPaint = false;
+            layer.batchDraw();
+        });
+
+        stage.on('mousemove touchmove', function () {
+            if (!isPaint) {
+                return;
+            }
+            var pos = stage.getPointerPosition();
+            var newPoints = lastLine.points().concat([pos.x, pos.y]);
+            lastLine.points(newPoints);
+            layer.batchDraw();
+        });
+
+        function clearCanvas() {
+            layer.destroyChildren();
+            layer.batchDraw();
+            document.getElementById('prediction').textContent = '';
+        }
+
         function predictDigit() {
-            // Convertissez le contenu du canvas en une URL d'image
-            var imageURL = canvas.toDataURL('image/png');
+            var imageURL = stage.toDataURL();
 
             // Envoyez l'URL de l'image au serveur pour la prédiction
             fetch('/draw', {

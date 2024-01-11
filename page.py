@@ -264,7 +264,7 @@ def predict():
 def draw():
     if request.method == 'POST':
         # Récupérer l'image du dessin depuis la requête
-        file = request.files['image']
+        file = request.files['file']
         filepath = os.path.join(app.config['UPLOADS'], 'drawn_digit.png')
 
         # Créez le dossier 'uploads' s'il n'existe pas
