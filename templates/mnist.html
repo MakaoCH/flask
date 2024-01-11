@@ -1,36 +1,17 @@
 {% extends "layout.html" %}
 
 {% block content %}
-
-<h1 id="title">MNIST Flask Application</h1>
-<br>
-<form name="image_form" action="{{ url_for('mnist') }}" method="POST" enctype="multipart/form-data">
-            <img src="" id="preview">
-            <input type="file" name="file" id="filetag" accept="image/png, image/jpeg, image/jpg">
-            <input id="predict" class="cust_button" type="submit" value="Upload"/> 
-            <span id="num">{{number}}</span>
+<section>
+<h1>MNIST Prediction</h1>
+<form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" name="image_form">
+    <label for="file">Choisir une image:</label>
+    <input type="file" id="file" name="file" accept=".png, .jpg, .jpeg">
+    <br>
+    <input type="submit" value="Prediction">
 </form>
 
-<script>
-    var fileTag = document.getElementById("filetag"),
-        preview = document.getElementById("preview");
-        
-    fileTag.addEventListener("change", function() {
-    changeImage(this);
-    });
-
-    function changeImage(input) {
-    var reader;
-
-    if (input.files && input.files[0]) {
-        reader = new FileReader();
-
-        reader.onload = function(e) {
-        preview.setAttribute('src', e.target.result);
-        }
-
-        reader.readAsDataURL(input.files[0]);
-    }
-    }
-</script>
+{% if number is defined %}
+    <h2>Prediction: {{ number }}</h2>
+{% endif %}
+</section>
 {% endblock %}

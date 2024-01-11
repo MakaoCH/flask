@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/4.5.1/fabric.min.js"></script>
+<section>
+    <h1>Dessiner et Prédiction</h1>
+    
+    <!-- Canvas pour le dessin -->
+    <canvas id="drawingCanvas" width="200" height="200" style="border:1px solid #000;"></canvas>
+    <br>
+    <button onclick="clearCanvas()">Effacer le dessin</button>
+    <button onclick="predictDigit()">Prédire le chiffre</button>
+    <h2>Prédiction: <span id="prediction">{{ prediction }}</span></h2>
+
+    <script>
+        var canvas = new fabric.Canvas('drawingCanvas', { isDrawingMode: true });
+    
+        function predictDigit() {
+            // Convertissez le contenu du canvas en une URL d'image
+            var imageURL = canvas.toDataURL('image/png');
+
+            // Envoyez l'URL de l'image au serveur pour la prédiction
+            fetch('/draw', {
+                method: 'POST',
+                body: createFormData({ image: imageURL }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('prediction').textContent = data.prediction;
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function createFormData(data) {
+            var formData = new FormData();
+
+            for (var key in data) {
+                formData.append(key, data[key]);
+            }
+
+            return formData;
+        }
+    </script>
+</section>
+{% endblock %}

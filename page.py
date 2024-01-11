@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import requests
 import json
@@ -10,12 +10,16 @@ import matplotlib.pyplot as plt
 import base64
 from io import BytesIO
 from collections import defaultdict
+import keras
+import cv2
+import numpy as np
 
 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['UPLOADS'] = 'uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'csv', 'xlsx', 'xls'}
 db = SQLAlchemy(app)
 
@@ -227,6 +231,59 @@ def history():
     else:
         return render_template("erreur.html", message=f"Erreur lors de la récupération des informations sur la bourse. Code d'état : {response.status_code}")
 
+cnn = keras.models.load_model('mnist_model.h5')
+
+def process(file):
+    image = cv2.imread(file)
+    image = cv2.resize(image, (32, 32))
+    image = np.resize(image, (1, 32, 32, 3))
+    image = image/255.0
+    image = 1-image
+    return image
+
+@app.route('/pict', methods=['GET', 'POST'])
+def predict():
+    if request.method == 'POST':
+        file = request.files['file']
+        filepath = os.path.join(app.config['UPLOADS'], file.filename)
+
+        # Créez le dossier 'uploads' s'il n'existe pas
+        if not os.path.exists(app.config['UPLOADS']):
+            os.makedirs(app.config['UPLOADS'])
+
+        file.save(filepath)
+        image = process(filepath)
+        print('process done')
+        prediction = np.argmax(cnn.predict(image), axis=-1)
+
+        return render_template('mnist.html', number=prediction[0])
+
+    return render_template('mnist.html')
+
+@app.route('/draw', methods=['GET', 'POST'])
+def draw():
+    if request.method == 'POST':
+        # Récupérer l'image du dessin depuis la requête
+        file = request.files['image']
+        filepath = os.path.join(app.config['UPLOADS'], 'drawn_digit.png')
+
+        # Créez le dossier 'uploads' s'il n'existe pas
+        if not os.path.exists(app.config['UPLOADS']):
+            os.makedirs(app.config['UPLOADS'])
+
+        file.save(filepath)
+
+        # Prétraitement de l'image si nécessaire
+        drawn_image = process(filepath)
+
+        # Effectuer la prédiction à l'aide du modèle
+        prediction = np.argmax(cnn.predict(drawn_image), axis=-1)
+
+        return jsonify({'prediction': int(prediction)})
+
+    return render_template('draw.html')
+
+    
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
