@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section>
+    <h1>Stock entreprise {{ entreprise_symbole }}</h1>
+
+    {% if base64_img %}
+        <img src="data:image/png;base64,{{ base64_img }}" alt="Stock Chart">
+    {% else %}
+        <p>Aucune donnée disponible pour {{ entreprise_symbole }}.</p>
+    {% endif %}
+</section>
+{% endblock %}
+

@@ -1,0 +1,13 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section>
+    <h1>Télécharger un fichier (csv ou excel)</h1>
+    <form method=post enctype=multipart/form-data action="{{ url_for('upload_file') }}">
+        <input type="file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+        <button type="submit">Charger</button>
+    </form>
+    <h1>Résultats</h1>
+    {{ statistics|safe }}
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section>
+    <h1 class="message">Bienvenue !</h1>
+    <form action="{{ url_for('rep_form') }}" method="post" class="form">
+                <label for="prenom">Prénom :</label>
+                <input type="text" id="prenom" name="prenom"/>
+                <label for="nom">Nom :</label>
+                <input type="text" id="nom" name="nom"/>
+                <label for="sexe">Sexe :</label>
+                <select name="sexe" id="sexe" name="sexe" required >
+                <option value="" disabled selected hidden>Choisissez votre sexe</option>
+                <option value="Homme">Homme</option>
+                <option value="Femme">Femme</option>
+            </select>
+
+                <label for="pseudo">Pseudo :</label>
+                <input type="text" id="pseudo" name="pseudo"/>
+            <button type="submit">Envoyer</button>
+</form>
+</section>
+{% endblock %}

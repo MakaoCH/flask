@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section>
+    <h1>Stock entreprise</h1>
+    <form action="{{ url_for('history') }}" method="POST" class="form">
+        <label for="entreprise_symbole">Symbole de l'entreprise :</label>
+        <input type="text" id="entreprise_symbole" name="entreprise_symbole" required>
+        <label for="interval">Periode : <br>
+            1m: Range: 1 Day<br>
+            5m: Range: 1 Month<br>
+            15m: Range: 1 Month<br>
+            30m: Range: 1 Month<br>
+            1wk: Range: 5 Years<br>
+            1mo: Range: 10 Years.</label>
+        <input type="text" id="interval" name="interval" required>
+        <button type="submit">Rechercher</button>
+    </form>
+</section>
+{% endblock %}
+

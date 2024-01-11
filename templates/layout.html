@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel ="stylesheet" type="text/css" href="{{ url_for('static', filename='main.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{{ url_for('hello') }}">Accueil</a>
+            <a href="{{ url_for('users') }}">Inscrits</a>
+            <a href="{{ url_for('form_actu') }}">Actualités</a>
+            <a href="{{ url_for('form_bourse') }}">Bourse</a>
+            <a href="{{ url_for('download') }}">Statistiques</a>
+            <a href="{{ url_for('stocks') }}">Stocks</a>
+            <a href="#">MNIST</a>
+        </nav>
+    </header>
+
+    {% block content %}{% endblock %}
+</body>
+</html>

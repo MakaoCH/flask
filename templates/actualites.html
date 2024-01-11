@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block content %}
+    <h1>Actualités pour {{ entreprise_symbole }}</h1>
+
+    {% if articles %}
+        <ul>
+            {% for article in articles %}
+                <li>
+                    <h3>{{ article.title }}</h3>
+                    <p>{{ article.description }}</p>
+                    <p>Date de publication: {{ article.pubDate }}</p>
+                    <a href="{{ article.link }}" target="_blank">Lire l'article complet</a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Aucune actualité disponible pour {{ entreprise_symbole }}.</p>
+    {% endif %}
+{% endblock %}

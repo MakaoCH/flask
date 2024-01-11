@@ -1,0 +1,21 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<body>
+    <h1>Informations boursières pour {{ entreprise_symbole }}</h1>
+    {% if quotes %}
+        <ul>
+            <li>
+                <h3>Company: {{ quotes.companyName }}</h3>
+                <p>Stock Type: {{ quotes.stockType }}</p>
+                <p>Exchange: {{ quotes.exchange }}</p>
+                <p>lastSalePrice : {{ quotes.primaryData.lastSalePrice }}</p>
+                <p>netChange: {{ quotes.primaryData.netChange }}</p>
+                <p>percentageChange: {{ quotes.primaryData.percentageChange }}</p>              
+            </li>
+        </ul>
+    {% else %}
+        <p>Aucune information boursière disponible pour {{ entreprise_symbole }}.</p>
+    {% endif %}
+</body>
+{% endblock %}
