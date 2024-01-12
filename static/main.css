@@ -52,7 +52,7 @@ button {
 }
 
 #drawingContainer {
-    border: 1px solid black;
+    background-color: black;
 }
 
 footer {
