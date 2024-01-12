@@ -23,7 +23,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['UPLOADS'] = 'uploads'
-app.config['ALLOWED_EXTENSIONS'] = {'csv', 'xlsx', 'xls'}
+app.config['ALLOWED_EXTENSIONS'] = {'csv', 'xlsx', 'xls', 'png', 'jpg', 'jpeg'}
 db = SQLAlchemy(app)
 
 # Définition du modèle de données pour les utilisateurs dans la base de données
@@ -280,32 +280,38 @@ def predict():
 
     return render_template('mnist.html')  
 
-# Route pour afficher le formulaire de dessin et prédire le chiffre dessiné
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
 @app.route('/draw', methods=['GET', 'POST'])
 def draw():
     if request.method == 'POST':
         # Récupérer l'image du formulaire
         image_data = request.form['image']
 
+        # Décoder l'image à partir de base64
+        image_binary = base64.b64decode(image_data.split(',')[1])
+        
         # Convertir l'image en tableau numpy
-        image = Image.open(io.BytesIO(base64.b64decode(image_data.split(',')[1])))
+        image = Image.open(io.BytesIO(image_binary))
         image = image.convert('L')  # Convertir en niveaux de gris
         image = image.resize((28, 28))  # Redimensionner l'image à la taille attendue par le modèle
         image_array = np.array(image) / 255.0  # Normaliser les pixels entre 0 et 1
 
-        # Inverser les couleurs
-        inverted_image_array = 1.0 - image_array
-
         # Ajouter la dimension batch
-        inverted_image_array = inverted_image_array.reshape((1, 28, 28, 1))
+        image_array = image_array.reshape((1, 28, 28, 1))
+
+        # Sauvegarder l'image dans le dossier "uploads" avec un fond blanc
+        save_path = os.path.join(app.config['UPLOAD_FOLDER'], 'original_image.jpg')
+        Image.fromarray((image_array.squeeze()) * 255).convert('L').save(save_path)
 
         # Faire la prédiction
-        prediction = np.argmax(cnn.predict(inverted_image_array))
+        prediction = np.argmax(cnn.predict(image_array))
 
         return jsonify({'prediction': str(prediction)})
 
     return render_template('draw.html')
-    
+
 # Démarrer l'application Flask en mode débogage si le script est exécuté directement
 if __name__ == '__main__':
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
