@@ -2,16 +2,50 @@
 
 {% block content %}
 <section>
-<h1>MNIST Prediction</h1>
-<form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" name="image_form">
-    <label for="file">Choisir une image:</label>
-    <input type="file" id="file" name="file" accept=".png, .jpg, .jpeg">
-    <br>
-    <input type="submit" value="Prediction">
-</form>
+    <h1>MNIST Prediction</h1>
+    <form action="{{ url_for('predict') }}" method="post" enctype="multipart/form-data" name="image_form">
+        <label for="file">Choisir une image:</label>
+        <input type="file" id="file" name="file" accept=".png, .jpg, .jpeg" onchange="previewImage()">
+        <br>
+        <div id="imagePreview"></div>
+        <input type="submit" value="Prediction">
+    </form>
 
-{% if number is defined %}
-    <h2>Prediction: {{ number }}</h2>
-{% endif %}
+
+    {% if number is defined %}
+        <h2>Prediction: {{ number }}</h2>
+    {% endif %}
 </section>
+
+<script>
+    function previewImage() {
+        var fileInput = document.getElementById('file');
+        var imagePreview = document.getElementById('imagePreview');
+
+        // Vérifiez si un fichier est sélectionné
+        if (fileInput.files && fileInput.files[0]) {
+            var reader = new FileReader();
+
+            reader.onload = function (e) {
+                // Créez un élément d'image pour prévisualiser l'image
+                var img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.maxWidth = '100%';
+                img.style.height = 'auto';
+
+                // Supprimez les anciennes prévisualisations avant d'ajouter la nouvelle
+                while (imagePreview.firstChild) {
+                    imagePreview.removeChild(imagePreview.firstChild);
+                }
+
+                // Ajoutez l'image prévisualisée à la div
+                imagePreview.appendChild(img);
+            };
+
+            // Chargez le fichier en tant que données URL
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+    }
+</script>
+
 {% endblock %}

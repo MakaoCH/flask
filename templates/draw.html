@@ -9,7 +9,7 @@
     <br>
     <button onclick="clearCanvas()">Effacer</button>
     <button onclick="predictDigit()">Prediction</button>
-    <h2>Prediction: <span id="prediction"></span></h2>
+    <h2>Prediction: {{ number }} <span id="prediction"></span></h2>
 
     <script>
         var stage = new Konva.Stage({
@@ -63,7 +63,10 @@
             // Envoyez l'URL de l'image au serveur pour la prédiction
             fetch('/draw', {
                 method: 'POST',
-                body: createFormData({ image: imageURL }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'image=' + encodeURIComponent(imageURL),
             })
             .then(response => response.json())
             .then(data => {
@@ -75,12 +78,12 @@
         function createFormData(data) {
             var formData = new FormData();
 
-            for (var key in data) {
-                formData.append(key, data[key]);
-            }
+            // Utilisez le bon nom de champ pour le fichier (dans ce cas, 'file')
+            formData.append('file', data.image);
 
             return formData;
         }
+
     </script>
 </section>
 {% endblock %}

@@ -1,100 +1,82 @@
-import pandas as pd
-import numpy as np
-
 import os
-import cv2
 from PIL import Image
-
-from tqdm.auto import trange, tqdm
-
+import numpy as np
+import pandas as pd
 import keras
-import tensorflow as tf
-from tqdm.keras import TqdmCallback
+import matplotlib.pyplot as plt
 
-from matplotlib import pyplot as plt
-from ipywidgets import interact
+# Chemins des dossiers d'entraînement et de test
+train_folder = 'data/MNIST - JPG - training'
+test_folder = 'data/MNIST - JPG - testing'
 
-import plotly.express as px
-import plotly.graph_objects as go
-import plotly.figure_factory as ff
-from plotly.subplots import make_subplots
+# Listes pour stocker les images et les étiquettes d'entraînement
+train_images = []
+train_labels = []
 
-from keras.preprocessing.image import ImageDataGenerator
+# Parcourir les sous-dossiers correspondant aux chiffres de 0 à 9
+for digit in range(10):
+    digit_folder = os.path.join(train_folder, str(digit))
+    
+    # Parcourir les fichiers d'images dans chaque sous-dossier
+    for filename in os.listdir(digit_folder):
+        if filename.endswith(".jpg"):
+            # Chemin complet de l'image
+            img_path = os.path.join(digit_folder, filename)
+            
+            # Charger l'image, la convertir en niveaux de gris et la redimensionner
+            img = Image.open(img_path).convert('L')
+            img = img.resize((28, 28))
+            
+            # Convertir l'image en tableau numpy et normaliser les pixels
+            img_array = np.array(img) / 255.0
+            
+            # Ajouter l'image et l'étiquette aux listes
+            train_images.append(img_array)
+            train_labels.append(digit)
 
+# Convertir les listes en tableaux numpy
+train_images = np.array(train_images)
+train_labels = np.array(train_labels)
 
-train = pd.read_csv('data/train.csv')
-test = np.genfromtxt('data/test.csv', delimiter=',', skip_header=1)
-sample_submission = pd.read_csv('data/sample_submission.csv')
+# Chargement des données de test
+test_images = []
+test_labels = []
 
-train.shape, test.shape, sample_submission.shape
+# Parcourir les sous-dossiers correspondant aux chiffres de 0 à 9
+for digit in range(10):
+    digit_folder = os.path.join(test_folder, str(digit))
+    
+    # Parcourir les fichiers d'images dans chaque sous-dossier
+    for filename in os.listdir(digit_folder):
+        if filename.endswith(".jpg"):
+            # Chemin complet de l'image
+            img_path = os.path.join(digit_folder, filename)
+            
+            # Charger l'image, la convertir en niveaux de gris et la redimensionner
+            img = Image.open(img_path).convert('L')
+            img = img.resize((28, 28))
+            
+            # Convertir l'image en tableau numpy et normaliser les pixels
+            img_array = np.array(img) / 255.0
+            
+            # Ajouter l'image et l'étiquette aux listes
+            test_images.append(img_array)
+            test_labels.append(digit)
 
-labels = train['label']
-train.drop(['label'], axis=1, inplace=True)
-
-train = np.array(train, dtype=float)
-
-train = train.reshape(42000, 28, 28)
-test = test.reshape(28000, 28, 28)
-
-img_rows, img_cols = (32, 32)
-input_shape = (img_rows, img_cols, 3)
-
-def resizeImage(images, new_size):
-    nimages = np.zeros((images.shape[0], new_size[0], new_size[1], 3))
-    for image in trange(images.shape[0]):
-        nimages[image, :new_size[0], :new_size[1], 0] = cv2.resize(images[image], new_size)
-        nimages[image, :new_size[0], :new_size[1], 1] = cv2.resize(images[image], new_size)
-        nimages[image, :new_size[0], :new_size[1], 2] = cv2.resize(images[image], new_size)
-    return nimages
-
-train = resizeImage(train, (img_rows, img_cols))
-test = resizeImage(test, (img_rows, img_cols))
-
-val_split = 0.05
-BATCH_SIZE = 256
-TRAIN_STEPS_PER_EPOCH = train.shape[0]*(1-val_split)//BATCH_SIZE
-VAL_STEPS_PER_EPOCH = train.shape[0]*val_split//BATCH_SIZE
-
-train_datagen = ImageDataGenerator(rescale=1/255.0,
-                                   rotation_range=15,
-                                   zoom_range=0.15,
-                                   validation_split=val_split,
-                                   width_shift_range=0.15,
-                                   height_shift_range=0.15,
-                                   shear_range=0.15,
-                                   fill_mode='nearest')
-
-test_datagen = ImageDataGenerator(rescale=1/255.0)
-
-val_split = 0.05
-BATCH_SIZE = 256
-TRAIN_STEPS_PER_EPOCH = train.shape[0]*(1-val_split)//BATCH_SIZE
-VAL_STEPS_PER_EPOCH = train.shape[0]*val_split//BATCH_SIZE
-
-train_aug = train_datagen.flow(train,
-                               labels,
-                               batch_size=BATCH_SIZE,
-                               subset='training',
-                               shuffle=False,
-                               seed=42)
-
-valid_aug = train_datagen.flow(train,
-                               labels,
-                               batch_size=BATCH_SIZE,
-                               subset='validation',
-                               shuffle=False,
-                               seed=42)
+# Convertir les listes en tableaux numpy
+test_images = np.array(test_images)
+test_labels = np.array(test_labels)
 
 
-test_aug = train_datagen.flow(test,
-                              batch_size=BATCH_SIZE,
-                              shuffle=False,
-                              seed=42)
+# Vérifier les dimensions des tableaux
+print("Train Images Shape:", train_images.shape)
+print("Train Labels Shape:", train_labels.shape)
+print("Test Images Shape:", test_images.shape)
 
+# Définition du modèle
 def build_model():
     cnn = keras.models.Sequential()
-
-    cnn.add(keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', kernel_initializer='random_uniform', input_shape=input_shape))
+    cnn.add(keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same', kernel_initializer='random_uniform', input_shape=(28, 28, 1)))
     cnn.add(keras.layers.Dropout(0.5))
     cnn.add(keras.layers.MaxPool2D(pool_size=(2, 2)))
 
@@ -108,49 +90,46 @@ def build_model():
 
     cnn.add(keras.layers.Flatten())
     cnn.add(keras.layers.Dense(units=128, activation='relu'))
-
     cnn.add(keras.layers.Dense(units=10, activation='softmax'))
     
-    cnn.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy', metrics=['acc'])
+    cnn.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
     return cnn
 
+# Construction du modèle
 cnn = build_model()
 
-#keras.utils.plot_model(cnn, show_shapes=True, show_layer_names=True)
+# Définition d'une fonction pour afficher les courbes d'apprentissage
+def plot_history(history):
+    plt.figure(figsize=(12, 4))
 
-ch = tf.keras.callbacks.ModelCheckpoint(
-    filepath='mnist_model.h5',
-    save_weights_only=False,
-    monitor='acc',
-    mode='max',
-    save_best_only=True
-)
+    # Plot training & validation accuracy values
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('Model accuracy')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend(['Train', 'Validation'], loc='upper left')
 
-es = tf.keras.callbacks.EarlyStopping(
-    monitor='acc',
-    min_delta=0.003,
-    patience=15,
-    mode='max',
-    restore_best_weights=True,
-)
+    # Plot training & validation loss values
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend(['Train', 'Validation'], loc='upper left')
 
-lr = tf.keras.callbacks.ReduceLROnPlateau(
-    monitor='acc',
-    factor=0.05,
-    patience=3,
-    mode='max',
-)
+    plt.tight_layout()
+    plt.show()
 
-cnn.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['acc'])
+# Entraînement du modèle avec suivi des courbes d'apprentissage
+history = cnn.fit(train_images, train_labels, epochs=50, validation_split=0.2, verbose=1)
+plot_history(history)
 
-history = cnn.fit(train_aug, validation_data=valid_aug, epochs=50, verbose=0,
-                  callbacks=[ch, es, lr, TqdmCallback(verbose=1)])
+# Prédiction sur les données de test
+y_pred = np.argmax(cnn.predict(test_images), axis=-1)
 
-y_pred = np.argmax(cnn.predict(test), axis=-1)
-
-
-sample_submission['Label'] = y_pred
-sample_submission.to_csv('ss.csv', index=False)
-
+# Sauvegarde du modèle
 cnn.save('mnist_model.h5')
 
